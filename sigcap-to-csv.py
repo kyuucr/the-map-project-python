@@ -43,7 +43,7 @@ def cb_preprocess(obj):
         wifi_5_count = 0
         wifi_6_count = 0
         for wifi_entry in entry['wifi_info']:
-            match wifi_helper.get_wifi_freq_code(wifi_entry['primaryFreq']):
+            match wifi_helper.get_freq_code(wifi_entry['primaryFreq']):
                 case "2.4":
                     wifi_2_4_count += 1
                 case "5":
