@@ -58,3 +58,15 @@ def get_network_type(sigcap):
         networkType = "unknown"
 
     return networkType
+
+
+def is_primary(cell):
+    return (cell["status"] == "primary"
+            or cell["width"] > 0
+            or cell["registered"])
+
+
+def clean_signal(number):
+    return ("NaN" if (number == 2147483647
+                      or number == 9223372036854775807)
+            else number)

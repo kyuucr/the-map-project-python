@@ -3,6 +3,7 @@ import csv
 from lib import loader
 from lib import filter_json
 from lib import util
+from lib import cell_helper
 from lib import wifi_helper
 import logging
 from pathlib import Path
@@ -121,9 +122,101 @@ def cb_process(obj):
             "cellBandwidths": entry["cellBandwidths"],
             "usingCA": entry["usingCA"],
         }
+
+        # Sensor
         if ("sensor" in entry and options.print_sensor_data):
             for key, val in entry["sensor"].items():
                 temp_out[f"sensor.{key}"] = val
+
+        temp_out["lte_count"] = len(entry["cell_info"])
+
+        # LTE primary
+        lte_primary = next(
+            (x for x in entry["cell_info"] if util.is_primary(x)), None)
+        if lte_primary:
+            temp_out["lte_primary_pci"] = util.clean_signal(lte_primary["pci"])
+            temp_out["lte_primary_ci"] = util.clean_signal(lte_primary["ci"])
+            temp_out["lte_primary_earfcn"] = util.clean_signal(
+                lte_primary["earfcn"])
+            temp_out["lte_primary_band*"] = cell_helper.earfcn_to_band(
+                lte_primary["earfcn"])
+            temp_out["lte_primary_freq_mhz*"] = cell_helper.earfcn_to_freq(
+                lte_primary["earfcn"])
+            temp_out["lte_primary_width_mhz"] = util.clean_signal(
+                lte_primary["width"] / 1000)
+            temp_out["lte_primary_rsrp_dbm"] = util.clean_signal(
+                lte_primary["rsrp"])
+            temp_out["lte_primary_rsrq_db"] = util.clean_signal(
+                lte_primary["rsrq"])
+            temp_out["lte_primary_cqi"] = util.clean_signal(
+                lte_primary["cqi"])
+            temp_out["lte_primary_rssi_dbm"] = util.clean_signal(
+                lte_primary["rssi"])
+            temp_out["lte_primary_rssnr_db"] = util.clean_signal(
+                lte_primary["rssnr"])
+            temp_out["lte_primary_timing"] = util.clean_signal(
+                lte_primary["timing"])
+        else:
+            temp_out["lte_primary_pci"] = "NaN"
+            temp_out["lte_primary_ci"] = "NaN"
+            temp_out["lte_primary_earfcn"] = "NaN"
+            temp_out["lte_primary_band*"] = "N/A"
+            temp_out["lte_primary_freq_mhz*"] = "NaN"
+            temp_out["lte_primary_width_mhz"] = "NaN"
+            temp_out["lte_primary_rsrp_dbm"] = "NaN"
+            temp_out["lte_primary_rsrq_db"] = "NaN"
+            temp_out["lte_primary_cqi"] = "NaN"
+            temp_out["lte_primary_rssi_dbm"] = "NaN"
+            temp_out["lte_primary_rssnr_db"] = "NaN"
+            temp_out["lte_primary_timing"] = "NaN"
+
+        temp_out["nr_count"] = len(entry["nr_info"])
+
+        # NR primary
+        nr_primary = next(
+            (x for x in entry["nr_info"] if util.is_primary(x)), None)
+        if nr_primary is None and len(entry["nr_info"]) > 0:
+            nr_primary = entry["nr_info"][0]
+        if nr_primary:
+            temp_out["nr_first_is_primary"] = (nr_primary["is_primary"]
+                                               == "primary")
+            temp_out["nr_first_is_signalStrAPI"] = nr_primary["isSignalStrAPI"]
+            temp_out["nr_first_pci"] = util.clean_signal(
+                nr_primary["nrPci"])
+            temp_out["nr_first_nci"] = util.clean_signal(
+                nr_primary["nci"])
+            temp_out["nr_first_arfcn"] = util.clean_signal(
+                nr_primary["nrarfcn"])
+            temp_out["nr_first_band*"] = cell_helper.nrarfcn_to_band(
+                nr_primary["nrarfcn"])
+            temp_out["nr_first_freq_mhz*"] = cell_helper.nrarfcn_to_freq(
+                nr_primary["nrarfcn"])
+            temp_out["nr_first_ss_rsrp_dbm"] = util.clean_signal(
+                nr_primary["ssRsrp"])
+            temp_out["nr_first_ss_rsrq_db"] = util.clean_signal(
+                nr_primary["ssRsrq"])
+            temp_out["nr_first_ss_sinr_db"] = util.clean_signal(
+                nr_primary["ssSinr"])
+            temp_out["nr_first_csi_rsrp_dbm"] = util.clean_signal(
+                nr_primary["csiRsrp"])
+            temp_out["nr_first_csi_rsrq_db"] = util.clean_signal(
+                nr_primary["csiRsrq"])
+            temp_out["nr_first_csi_sinr_db"] = util.clean_signal(
+                nr_primary["csiSinr"])
+        else:
+            temp_out["nr_first_is_primary"] = "N/A"
+            temp_out["nr_first_is_signalStrAPI"] = "N/A"
+            temp_out["nr_first_pci"] = "NaN"
+            temp_out["nr_first_nci"] = "NaN"
+            temp_out["nr_first_arfcn"] = "NaN"
+            temp_out["nr_first_band*"] = "N/A"
+            temp_out["nr_first_freq_mhz*"] = "NaN"
+            temp_out["nr_first_ss_rsrp_dbm"] = "NaN"
+            temp_out["nr_first_ss_rsrq_db"] = "NaN"
+            temp_out["nr_first_ss_sinr_db"] = "NaN"
+            temp_out["nr_first_csi_rsrp_dbm"] = "NaN"
+            temp_out["nr_first_csi_rsrq_db"] = "NaN"
+            temp_out["nr_first_csi_sinr_db"] = "NaN"
 
         output_list.append(temp_out)
 
@@ -214,6 +307,35 @@ def main():
             "sensor.battCurrAveUa",
             "sensor.battEnergyNwh"
         ]
+    fieldnames += [
+        "lte_count",
+        "lte_primary_pci",
+        "lte_primary_ci",
+        "lte_primary_earfcn",
+        "lte_primary_band*",
+        "lte_primary_freq_mhz*",
+        "lte_primary_width_mhz",
+        "lte_primary_rsrp_dbm",
+        "lte_primary_rsrq_db",
+        "lte_primary_cqi",
+        "lte_primary_rssi_dbm",
+        "lte_primary_rssnr_db",
+        "lte_primary_timing",
+        "nr_count",
+        "nr_first_is_primary",
+        "nr_first_is_signalStrAPI",
+        "nr_first_pci",
+        "nr_first_nci",
+        "nr_first_arfcn",
+        "nr_first_band*",
+        "nr_first_freq_mhz*",
+        "nr_first_ss_rsrp_dbm",
+        "nr_first_ss_rsrq_db",
+        "nr_first_ss_sinr_db",
+        "nr_first_csi_rsrp_dbm",
+        "nr_first_csi_rsrq_db",
+        "nr_first_csi_sinr_db",
+    ]
     csv_writer = csv.DictWriter(
         args.output_file,
         fieldnames=fieldnames)
