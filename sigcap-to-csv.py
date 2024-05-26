@@ -240,6 +240,70 @@ def cb_process(obj):
             temp_out["nr_first_csi_rsrq_db"] = "NaN"
             temp_out["nr_first_csi_sinr_db"] = "NaN"
 
+        # NR cells
+        nr_cells = sorted(entry["nr_info"], key=lambda x: x["ssRsrp"])
+        i = 1
+        for cell in nr_cells:
+            temp_out[f"nr_other{i}_pci"] = util.clean_signal(
+                nr_primary["nrPci"])
+            temp_out[f"nr_other{i}_arfcn"] = util.clean_signal(
+                nr_primary["nrarfcn"])
+            temp_out[f"nr_other{i}_band*"] = cell_helper.nrarfcn_to_band(
+                nr_primary["nrarfcn"])
+            temp_out[f"nr_other{i}_freq_mhz*"] = cell_helper.nrarfcn_to_freq(
+                nr_primary["nrarfcn"])
+            temp_out[f"nr_other{i}_ss_rsrp_dbm"] = util.clean_signal(
+                nr_primary["ssRsrp"])
+            temp_out[f"nr_other{i}_ss_rsrq_db"] = util.clean_signal(
+                nr_primary["ssRsrq"])
+            temp_out[f"nr_other{i}_csi_rsrp_dbm"] = util.clean_signal(
+                nr_primary["csiRsrp"])
+            temp_out[f"nr_other{i}_csi_rsrq_db"] = util.clean_signal(
+                nr_primary["csiRsrq"])
+            temp_out[f"nr_other{i}_is_signalStrAPI"] = nr_primary[
+                "isSignalStrAPI"]
+            i += 1
+        while i < max_nr:
+            temp_out[f"nr_other{i}_pci"] = "NaN"
+            temp_out[f"nr_other{i}_arfcn"] = "NaN"
+            temp_out[f"nr_other{i}_band*"] = "N/A"
+            temp_out[f"nr_other{i}_freq_mhz*"] = "NaN"
+            temp_out[f"nr_other{i}_ss_rsrp_dbm"] = "NaN"
+            temp_out[f"nr_other{i}_ss_rsrq_db"] = "NaN"
+            temp_out[f"nr_other{i}_csi_rsrp_dbm"] = "NaN"
+            temp_out[f"nr_other{i}_csi_rsrq_db"] = "NaN"
+            temp_out[f"nr_other{i}_is_signalStrAPI"] = "N/A"
+            i += 1
+
+        # LTE cells
+        lte_cells = sorted(entry["cell_info"], key=lambda x: x["rsrp"])
+        i = 1
+        for cell in lte_cells:
+            temp_out[f"lte_other{i}_pci"] = util.clean_signal(cell["pci"])
+            temp_out[f"lte_other{i}_earfcn"] = util.clean_signal(
+                cell["earfcn"])
+            temp_out[f"lte_other{i}_band*"] = cell_helper.earfcn_to_band(
+                cell["earfcn"])
+            temp_out[f"lte_other{i}_freq_mhz*"] = cell_helper.earfcn_to_freq(
+                cell["earfcn"])
+            temp_out[f"lte_other{i}_rsrp_dbm"] = util.clean_signal(
+                cell["rsrp"])
+            temp_out[f"lte_other{i}_rsrq_db"] = util.clean_signal(
+                cell["rsrq"])
+            temp_out[f"lte_other{i}_rssi_dbm"] = util.clean_signal(
+                cell["rssi"])
+            i += 1
+        while i < max_lte:
+            temp_out[f"lte_other{i}_pci"] = "NaN"
+            temp_out[f"lte_other{i}_earfcn"] = "NaN"
+            temp_out[f"lte_other{i}_band*"] = "N/A"
+            temp_out[f"lte_other{i}_freq_mhz*"] = "NaN"
+            temp_out[f"lte_other{i}_rsrp_dbm"] = "NaN"
+            temp_out[f"lte_other{i}_rsrq_db"] = "NaN"
+            temp_out[f"lte_other{i}_rssi_dbm"] = "NaN"
+            i += 1
+
+        logging.debug(temp_out)
         output_list.append(temp_out)
 
 
@@ -285,6 +349,7 @@ def main():
     print("\n===== Start processing! =====")
     loader.load_json(args.input, cb_process, options=args)
     output_list = sorted(output_list, key=lambda x: x["timestamp"])
+    logging.info(f"Len output_list {len(output_list)}")
 
     if len(output_list) > 0:
         print(f"Writing to {args.output_file.name} ...")
