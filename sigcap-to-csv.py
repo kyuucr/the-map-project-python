@@ -125,8 +125,22 @@ def cb_process(obj):
 
         # Sensor
         if ("sensor" in entry and options.print_sensor_data):
-            for key, val in entry["sensor"].items():
-                temp_out[f"sensor.{key}"] = val
+            temp_out["sensor.deviceTempC"] = entry["sensor"]["deviceTempC"]
+            temp_out["sensor.ambientTempC"] = entry["sensor"]["ambientTempC"]
+            temp_out["sensor.accelXMs2"] = entry["sensor"]["accelXMs2"]
+            temp_out["sensor.accelYMs2"] = entry["sensor"]["accelYMs2"]
+            temp_out["sensor.accelZMs2"] = entry["sensor"]["accelZMs2"]
+            temp_out["sensor.battPresent"] = entry["sensor"]["battPresent"]
+            temp_out["sensor.battStatus"] = entry["sensor"]["battStatus"]
+            temp_out["sensor.battTechnology"] = entry["sensor"][
+                "battTechnology"]
+            temp_out["sensor.battCapPerc"] = entry["sensor"]["battCapPerc"]
+            temp_out["sensor.battTempC"] = entry["sensor"]["battTempC"]
+            temp_out["sensor.battChargeUah"] = entry["sensor"]["battChargeUah"]
+            temp_out["sensor.battVoltageMv"] = entry["sensor"]["battVoltageMv"]
+            temp_out["sensor.battCurrNowUa"] = entry["sensor"]["battCurrNowUa"]
+            temp_out["sensor.battCurrAveUa"] = entry["sensor"]["battCurrAveUa"]
+            temp_out["sensor.battEnergyNwh"] = entry["sensor"]["battEnergyNwh"]
 
         temp_out["lte_count"] = len(entry["cell_info"])
 
@@ -156,6 +170,10 @@ def cb_process(obj):
                 lte_primary["rssnr"])
             temp_out["lte_primary_timing"] = util.clean_signal(
                 lte_primary["timing"])
+
+            # Remove LTE primary
+            entry["cell_info"] = [val for val in entry["cell_info"]
+                                  if val != lte_primary]
         else:
             temp_out["lte_primary_pci"] = "NaN"
             temp_out["lte_primary_ci"] = "NaN"
@@ -203,6 +221,10 @@ def cb_process(obj):
                 nr_primary["csiRsrq"])
             temp_out["nr_first_csi_sinr_db"] = util.clean_signal(
                 nr_primary["csiSinr"])
+
+            # Remove NR primary
+            entry["nr_info"] = [val for val in entry["nr_info"]
+                                if val != nr_primary]
         else:
             temp_out["nr_first_is_primary"] = "N/A"
             temp_out["nr_first_is_signalStrAPI"] = "N/A"
@@ -264,85 +286,17 @@ def main():
     loader.load_json(args.input, cb_process, options=args)
     output_list = sorted(output_list, key=lambda x: x["timestamp"])
 
-    print(f"Writing to {args.output_file.name} ...")
-    fieldnames = [
-        "sigcap_version",
-        "android_version",
-        "is_debug",
-        "uuid",
-        "device_name",
-        "timestamp",
-        "latitude",
-        "longitude",
-        "altitude",
-        "hor_acc",
-        "ver_acc",
-        "operator",
-        "network_type*",
-        "override_network_type",
-        "radio_type",
-        "nrStatus",
-        "nrAvailable",
-        "dcNrRestricted",
-        "enDcAvailable",
-        "nrFrequencyRange",
-        "cellBandwidths",
-        "usingCA",
-    ]
-    if (args.print_sensor_data):
-        fieldnames += [
-            "sensor.deviceTempC",
-            "sensor.ambientTempC",
-            "sensor.accelXMs2",
-            "sensor.accelYMs2",
-            "sensor.accelZMs2",
-            "sensor.battPresent",
-            "sensor.battStatus",
-            "sensor.battTechnology",
-            "sensor.battCapPerc",
-            "sensor.battTempC",
-            "sensor.battChargeUah",
-            "sensor.battVoltageMv",
-            "sensor.battCurrNowUa",
-            "sensor.battCurrAveUa",
-            "sensor.battEnergyNwh"
-        ]
-    fieldnames += [
-        "lte_count",
-        "lte_primary_pci",
-        "lte_primary_ci",
-        "lte_primary_earfcn",
-        "lte_primary_band*",
-        "lte_primary_freq_mhz*",
-        "lte_primary_width_mhz",
-        "lte_primary_rsrp_dbm",
-        "lte_primary_rsrq_db",
-        "lte_primary_cqi",
-        "lte_primary_rssi_dbm",
-        "lte_primary_rssnr_db",
-        "lte_primary_timing",
-        "nr_count",
-        "nr_first_is_primary",
-        "nr_first_is_signalStrAPI",
-        "nr_first_pci",
-        "nr_first_nci",
-        "nr_first_arfcn",
-        "nr_first_band*",
-        "nr_first_freq_mhz*",
-        "nr_first_ss_rsrp_dbm",
-        "nr_first_ss_rsrq_db",
-        "nr_first_ss_sinr_db",
-        "nr_first_csi_rsrp_dbm",
-        "nr_first_csi_rsrq_db",
-        "nr_first_csi_sinr_db",
-    ]
-    csv_writer = csv.DictWriter(
-        args.output_file,
-        fieldnames=fieldnames)
-    csv_writer.writeheader()
-    csv_writer.writerows(output_list)
+    if len(output_list) > 0:
+        print(f"Writing to {args.output_file.name} ...")
+        csv_writer = csv.DictWriter(
+            args.output_file,
+            fieldnames=output_list[0].keys())
+        csv_writer.writeheader()
+        csv_writer.writerows(output_list)
 
-    print(f"DONE!")
+        print(f"DONE!")
+    else:
+        print("Empty data! Nothing to write.")
 
 
 if __name__ == "__main__":
