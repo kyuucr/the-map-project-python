@@ -414,8 +414,12 @@ def cb_process(obj):
         if len(rssi_2_4) > 0:
             temp_out["wifi_2.4_other_mean_rssi_dbm"] = util.mw_to_dbm(
                 np.mean(util.dbm_to_mw(rssi_2_4)))
-            temp_out["wifi_2.4_other_stddev_rssi_db"] = util.mw_to_dbm(
-                np.std(util.dbm_to_mw(rssi_2_4)))
+            stddev_mw = np.std(util.dbm_to_mw(rssi_2_4))
+            if stddev_mw != 0:
+                temp_out["wifi_2.4_other_stddev_rssi_db"] = util.mw_to_dbm(
+                    stddev_mw)
+            else:
+                temp_out["wifi_2.4_other_stddev_rssi_db"] = "NaN"
         else:
             temp_out["wifi_2.4_other_mean_rssi_dbm"] = "NaN"
             temp_out["wifi_2.4_other_stddev_rssi_db"] = "NaN"
@@ -466,8 +470,12 @@ def cb_process(obj):
         if len(rssi_5) > 0:
             temp_out["wifi_5_other_mean_rssi_dbm"] = util.mw_to_dbm(
                 np.mean(util.dbm_to_mw(rssi_5)))
-            temp_out["wifi_5_other_stddev_rssi_db"] = util.mw_to_dbm(
-                np.std(util.dbm_to_mw(rssi_5)))
+            stddev_mw = np.std(util.dbm_to_mw(rssi_5))
+            if stddev_mw != 0:
+                temp_out["wifi_5_other_stddev_rssi_db"] = util.mw_to_dbm(
+                    stddev_mw)
+            else:
+                temp_out["wifi_5_other_stddev_rssi_db"] = "NaN"
         else:
             temp_out["wifi_5_other_mean_rssi_dbm"] = "NaN"
             temp_out["wifi_5_other_stddev_rssi_db"] = "NaN"
@@ -517,8 +525,12 @@ def cb_process(obj):
         if len(rssi_6) > 0:
             temp_out["wifi_6_other_mean_rssi_dbm"] = util.mw_to_dbm(
                 np.mean(util.dbm_to_mw(rssi_6)))
-            temp_out["wifi_6_other_stddev_rssi_db"] = util.mw_to_dbm(
-                np.std(util.dbm_to_mw(rssi_6)))
+            stddev_mw = np.std(util.dbm_to_mw(rssi_6))
+            if stddev_mw != 0:
+                temp_out["wifi_6_other_stddev_rssi_db"] = util.mw_to_dbm(
+                    stddev_mw)
+            else:
+                temp_out["wifi_6_other_stddev_rssi_db"] = "NaN"
         else:
             temp_out["wifi_6_other_mean_rssi_dbm"] = "NaN"
             temp_out["wifi_6_other_stddev_rssi_db"] = "NaN"
