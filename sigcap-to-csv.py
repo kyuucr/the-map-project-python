@@ -144,6 +144,57 @@ def cb_process(obj):
             temp_out["sensor.battCurrAveUa"] = entry["sensor"]["battCurrAveUa"]
             temp_out["sensor.battEnergyNwh"] = entry["sensor"]["battEnergyNwh"]
 
+        # iperf
+        if "iperf_info" in entry and len(entry["iperf_info"]) > 0:
+            iperf_tputs = [val["tputMbps"] for val in entry["iperf_info"]]
+            temp_out["iperf_tput_mean_mbps"] = np.mean(iperf_tputs)
+            temp_out["iperf_tput_stddev_mbps"] = np.std(iperf_tputs)
+            temp_out["iperf_target"] = next(
+                (val["target"] for val in entry["iperf_info"]
+                 if "target" in val and val["target"]),
+                "N/A")
+            temp_out["iperf_direction"] = next(
+                (val["direction"] for val in entry["iperf_info"]
+                 if "direction" in val and val["direction"]),
+                "N/A")
+            temp_out["iperf_protocol"] = next(
+                (val["protocol"] for val in entry["iperf_info"]
+                 if "protocol" in val and val["protocol"]),
+                "N/A")
+        else:
+            temp_out["iperf_tput_mean_mbps"] = "NaN"
+            temp_out["iperf_tput_stddev_mbps"] = "NaN"
+            temp_out["iperf_target"] = "N/A"
+            temp_out["iperf_direction"] = "N/A"
+            temp_out["iperf_protocol"] = "N/A"
+
+        # ping
+        if "ping_info" in entry and len(entry["ping_info"]) > 0:
+            ping_rtts = [val["time"] for val in entry["ping_info"]]
+            temp_out["ping_rtt_mean_ms"] = np.mean(ping_rtts)
+            temp_out["ping_rtt_stddev_ms"] = np.std(ping_rtts)
+            temp_out["ping_target"] = next(
+                (val["target"] for val in entry["ping_info"]
+                 if "target" in val and val["target"]),
+                "N/A")
+        else:
+            temp_out["ping_rtt_mean_ms"] = "NaN"
+            temp_out["ping_rtt_stddev_ms"] = "NaN"
+            temp_out["ping_target"] = "N/A"
+
+        # HTTP
+        if "http_info" in entry:
+            temp_out["http_tput_mean_mbps"] = (
+                (entry["http_info"]["bytesDownloaded"] * 8e3
+                 / entry["http_info"]["durationNano"])
+                if entry["http_info"]["durationNano"] > 0
+                else "NaN")
+            temp_out["http_target"] = (
+                entry["http_info"]["targetUrl"]
+                if ("targetUrl" in entry["http_info"]
+                    and entry["http_info"]["targetUrl"])
+                else "N/A")
+
         temp_out["lte_count"] = len(entry["cell_info"])
 
         # LTE primary
