@@ -6,6 +6,7 @@ from lib import util
 from lib import cell_helper
 from lib import wifi_helper
 import logging
+import numpy as np
 from pathlib import Path
 
 max_lte = -1
@@ -43,13 +44,14 @@ def cb_preprocess(obj):
         wifi_5_count = 0
         wifi_6_count = 0
         for wifi_entry in entry['wifi_info']:
-            match wifi_helper.get_freq_code(wifi_entry['primaryFreq']):
-                case "2.4":
-                    wifi_2_4_count += 1
-                case "5":
-                    wifi_5_count += 1
-                case "6":
-                    wifi_6_count += 1
+            if not wifi_entry["connected"]:
+                match wifi_helper.get_freq_code(wifi_entry['primaryFreq']):
+                    case "2.4":
+                        wifi_2_4_count += 1
+                    case "5":
+                        wifi_5_count += 1
+                    case "6":
+                        wifi_6_count += 1
         if (max_wifi_2_4 < wifi_2_4_count):
             max_wifi_2_4 = wifi_2_4_count
         if (max_wifi_5 < wifi_5_count):
@@ -303,6 +305,209 @@ def cb_process(obj):
             temp_out[f"lte_other{i}_rssi_dbm"] = "NaN"
             i += 1
 
+        # Connected Wi-Fi
+        wifi_conn = next(
+            (val for val in entry["wifi_info"] if val["connected"]), None)
+        if wifi_conn:
+            temp_out["wifi_connected_ssid"] = wifi_conn["ssid"]
+            temp_out["wifi_connected_bssid"] = wifi_conn["bssid"]
+            temp_out["wifi_connected_primary_freq_mhz"] = wifi_conn[
+                "primaryFreq"]
+            temp_out["wifi_connected_center_freq_mhz"] = (
+                wifi_conn["centerFreq1"] if wifi_conn["centerFreq1"] != 0
+                else wifi_conn["centerFreq0"] if wifi_conn["centerFreq0"] != 0
+                else wifi_conn["primaryFreq"])
+            temp_out["wifi_connected_primary_ch*"] = (
+                wifi_helper.get_channel_from_freq(wifi_conn["primaryFreq"], 20)
+            )
+            temp_out["wifi_connected_ch_num*"] = (
+                wifi_helper.get_channel_from_freq(
+                    wifi_conn["primaryFreq"], wifi_conn["width"])
+                if wifi_conn["width"] > 0
+                else temp_out["wifi_connected_primary_ch*"]
+            )
+            temp_out["wifi_connected_bw_mhz"] = (
+                wifi_conn["width"] if wifi_conn["width"] > 0 else "NaN")
+            temp_out["wifi_connected_rssi_dbm"] = util.clean_signal(
+                wifi_conn["rssi"])
+            temp_out["wifi_connected_standard"] = wifi_conn["standard"]
+            temp_out["wifi_connected_tx_link_speed_mbps"] = wifi_conn[
+                "txLinkSpeed"]
+            temp_out["wifi_connected_rx_link_speed_mbps"] = wifi_conn[
+                "rxLinkSpeed"]
+            temp_out["wifi_connected_max_tx_link_speed_mbps"] = wifi_conn[
+                "maxSupportedTxLinkSpeed"]
+            temp_out["wifi_connected_max_rx_link_speed_mbps"] = wifi_conn[
+                "maxSupportedRxLinkSpeed"]
+        else:
+            temp_out["wifi_connected_ssid"] = "N/A"
+            temp_out["wifi_connected_bssid"] = "N/A"
+            temp_out["wifi_connected_primary_freq_mhz"] = "NaN"
+            temp_out["wifi_connected_center_freq_mhz"] = "NaN"
+            temp_out["wifi_connected_primary_ch*"] = "NaN"
+            temp_out["wifi_connected_ch_num*"] = "NaN"
+            temp_out["wifi_connected_bw_mhz"] = "NaN"
+            temp_out["wifi_connected_rssi_dbm"] = "NaN"
+            temp_out["wifi_connected_standard"] = "N/A"
+            temp_out["wifi_connected_tx_link_speed_mbps"] = "NaN"
+            temp_out["wifi_connected_rx_link_speed_mbps"] = "NaN"
+            temp_out["wifi_connected_max_tx_link_speed_mbps"] = "NaN"
+            temp_out["wifi_connected_max_rx_link_speed_mbps"] = "NaN"
+
+        # Wi-Fi other 2.4 GHz
+        wifi_2_4 = [val for val in entry["wifi_info"]
+                    if not val["connected"] and val["primaryFreq"] < 5000]
+        temp_out["wifi_2.4_other_count"] = len(wifi_2_4)
+        rssi_2_4 = np.array([val["rssi"] for val in wifi_2_4])
+        logging.debug(f"RSSI 2.4 len: {len(rssi_2_4)}")
+        if len(rssi_2_4) > 0:
+            temp_out["wifi_2.4_other_mean_rssi_dbm"] = util.mw_to_dbm(
+                np.mean(util.dbm_to_mw(rssi_2_4)))
+            temp_out["wifi_2.4_other_stddev_rssi_db"] = util.mw_to_dbm(
+                np.std(util.dbm_to_mw(rssi_2_4)))
+        else:
+            temp_out["wifi_2.4_other_mean_rssi_dbm"] = "NaN"
+            temp_out["wifi_2.4_other_stddev_rssi_db"] = "NaN"
+        i = 1
+        for cell in wifi_2_4:
+            temp_out[f"wifi_2.4_other{i}_ssid"] = cell["ssid"]
+            temp_out[f"wifi_2.4_other{i}_bssid"] = cell["bssid"]
+            temp_out[f"wifi_2.4_other{i}_primary_freq_mhz"] = cell[
+                "primaryFreq"]
+            temp_out[f"wifi_2.4_other{i}_center_freq_mhz"] = (
+                cell["centerFreq1"] if cell["centerFreq1"] != 0
+                else cell["centerFreq0"] if cell["centerFreq0"] != 0
+                else cell["primaryFreq"])
+            temp_out[f"wifi_2.4_other{i}_primary_ch*"] = (
+                wifi_helper.get_channel_from_freq(cell["primaryFreq"], 20)
+            )
+            temp_out[f"wifi_2.4_other{i}_ch_num*"] = (
+                wifi_helper.get_channel_from_freq(
+                    cell["primaryFreq"], cell["width"])
+                if cell["width"] > 0
+                else temp_out[f"wifi_2.4_other{i}_primary_ch*"]
+            )
+            temp_out[f"wifi_2.4_other{i}_bw_mhz"] = (
+                cell["width"] if cell["width"] > 0 else "NaN")
+            temp_out[f"wifi_2.4_other{i}_rssi_dbm"] = util.clean_signal(
+                cell["rssi"])
+            temp_out[f"wifi_2.4_other{i}_standard"] = cell["standard"]
+            i += 1
+        while i <= max_wifi_2_4:
+            temp_out[f"wifi_2.4_other{i}_ssid"] = "N/A"
+            temp_out[f"wifi_2.4_other{i}_bssid"] = "N/A"
+            temp_out[f"wifi_2.4_other{i}_primary_freq_mhz"] = "NaN"
+            temp_out[f"wifi_2.4_other{i}_center_freq_mhz"] = "NaN"
+            temp_out[f"wifi_2.4_other{i}_primary_ch*"] = "NaN"
+            temp_out[f"wifi_2.4_other{i}_ch_num*"] = "NaN"
+            temp_out[f"wifi_2.4_other{i}_bw_mhz"] = "NaN"
+            temp_out[f"wifi_2.4_other{i}_rssi_dbm"] = "NaN"
+            temp_out[f"wifi_2.4_other{i}_standard"] = "N/A"
+            i += 1
+
+        # Wi-Fi other 5 GHz
+        wifi_5 = [val for val in entry["wifi_info"]
+                  if not val["connected"] and val["primaryFreq"] >= 5000
+                  and val["primaryFreq"] < 5925]
+        temp_out["wifi_5_other_count"] = len(wifi_5)
+        rssi_5 = np.array([val["rssi"] for val in wifi_5])
+        logging.debug(f"RSSI 2.4 len: {len(rssi_5)}")
+        if len(rssi_5) > 0:
+            temp_out["wifi_5_other_mean_rssi_dbm"] = util.mw_to_dbm(
+                np.mean(util.dbm_to_mw(rssi_5)))
+            temp_out["wifi_5_other_stddev_rssi_db"] = util.mw_to_dbm(
+                np.std(util.dbm_to_mw(rssi_5)))
+        else:
+            temp_out["wifi_5_other_mean_rssi_dbm"] = "NaN"
+            temp_out["wifi_5_other_stddev_rssi_db"] = "NaN"
+        i = 1
+        for cell in wifi_5:
+            temp_out[f"wifi_5_other{i}_ssid"] = cell["ssid"]
+            temp_out[f"wifi_5_other{i}_bssid"] = cell["bssid"]
+            temp_out[f"wifi_5_other{i}_primary_freq_mhz"] = cell[
+                "primaryFreq"]
+            temp_out[f"wifi_5_other{i}_center_freq_mhz"] = (
+                cell["centerFreq1"] if cell["centerFreq1"] != 0
+                else cell["centerFreq0"] if cell["centerFreq0"] != 0
+                else cell["primaryFreq"])
+            temp_out[f"wifi_5_other{i}_primary_ch*"] = (
+                wifi_helper.get_channel_from_freq(cell["primaryFreq"], 20)
+            )
+            temp_out[f"wifi_5_other{i}_ch_num*"] = (
+                wifi_helper.get_channel_from_freq(
+                    cell["primaryFreq"], cell["width"])
+                if cell["width"] > 0
+                else temp_out[f"wifi_5_other{i}_primary_ch*"]
+            )
+            temp_out[f"wifi_5_other{i}_bw_mhz"] = (
+                cell["width"] if cell["width"] > 0 else "NaN")
+            temp_out[f"wifi_5_other{i}_rssi_dbm"] = util.clean_signal(
+                cell["rssi"])
+            temp_out[f"wifi_5_other{i}_standard"] = cell["standard"]
+            i += 1
+        while i <= max_wifi_5:
+            temp_out[f"wifi_5_other{i}_ssid"] = "N/A"
+            temp_out[f"wifi_5_other{i}_bssid"] = "N/A"
+            temp_out[f"wifi_5_other{i}_primary_freq_mhz"] = "NaN"
+            temp_out[f"wifi_5_other{i}_center_freq_mhz"] = "NaN"
+            temp_out[f"wifi_5_other{i}_primary_ch*"] = "NaN"
+            temp_out[f"wifi_5_other{i}_ch_num*"] = "NaN"
+            temp_out[f"wifi_5_other{i}_bw_mhz"] = "NaN"
+            temp_out[f"wifi_5_other{i}_rssi_dbm"] = "NaN"
+            temp_out[f"wifi_5_other{i}_standard"] = "N/A"
+            i += 1
+
+        # Wi-Fi other 6 GHz
+        wifi_6 = [val for val in entry["wifi_info"]
+                  if not val["connected"] and val["primaryFreq"] >= 5925]
+        temp_out["wifi_6_other_count"] = len(wifi_6)
+        rssi_6 = np.array([val["rssi"] for val in wifi_6])
+        logging.debug(f"RSSI 2.4 len: {len(rssi_6)}")
+        if len(rssi_6) > 0:
+            temp_out["wifi_6_other_mean_rssi_dbm"] = util.mw_to_dbm(
+                np.mean(util.dbm_to_mw(rssi_6)))
+            temp_out["wifi_6_other_stddev_rssi_db"] = util.mw_to_dbm(
+                np.std(util.dbm_to_mw(rssi_6)))
+        else:
+            temp_out["wifi_6_other_mean_rssi_dbm"] = "NaN"
+            temp_out["wifi_6_other_stddev_rssi_db"] = "NaN"
+        i = 1
+        for cell in wifi_6:
+            temp_out[f"wifi_6_other{i}_ssid"] = cell["ssid"]
+            temp_out[f"wifi_6_other{i}_bssid"] = cell["bssid"]
+            temp_out[f"wifi_6_other{i}_primary_freq_mhz"] = cell[
+                "primaryFreq"]
+            temp_out[f"wifi_6_other{i}_center_freq_mhz"] = (
+                cell["centerFreq1"] if cell["centerFreq1"] != 0
+                else cell["centerFreq0"] if cell["centerFreq0"] != 0
+                else cell["primaryFreq"])
+            temp_out[f"wifi_6_other{i}_primary_ch*"] = (
+                wifi_helper.get_channel_from_freq(cell["primaryFreq"], 20)
+            )
+            temp_out[f"wifi_6_other{i}_ch_num*"] = (
+                wifi_helper.get_channel_from_freq(
+                    cell["primaryFreq"], cell["width"])
+                if cell["width"] > 0
+                else temp_out[f"wifi_6_other{i}_primary_ch*"]
+            )
+            temp_out[f"wifi_6_other{i}_bw_mhz"] = (
+                cell["width"] if cell["width"] > 0 else "NaN")
+            temp_out[f"wifi_6_other{i}_rssi_dbm"] = util.clean_signal(
+                cell["rssi"])
+            temp_out[f"wifi_6_other{i}_standard"] = cell["standard"]
+            i += 1
+        while i <= max_wifi_6:
+            temp_out[f"wifi_6_other{i}_ssid"] = "N/A"
+            temp_out[f"wifi_6_other{i}_bssid"] = "N/A"
+            temp_out[f"wifi_6_other{i}_primary_freq_mhz"] = "NaN"
+            temp_out[f"wifi_6_other{i}_center_freq_mhz"] = "NaN"
+            temp_out[f"wifi_6_other{i}_primary_ch*"] = "NaN"
+            temp_out[f"wifi_6_other{i}_ch_num*"] = "NaN"
+            temp_out[f"wifi_6_other{i}_bw_mhz"] = "NaN"
+            temp_out[f"wifi_6_other{i}_rssi_dbm"] = "NaN"
+            temp_out[f"wifi_6_other{i}_standard"] = "N/A"
+            i += 1
+
         logging.debug(temp_out)
         output_list.append(temp_out)
 
@@ -353,6 +558,7 @@ def main():
 
     if len(output_list) > 0:
         print(f"Writing to {args.output_file.name} ...")
+        logging.debug(f"Header list: {','.join(output_list[0].keys())}")
         csv_writer = csv.DictWriter(
             args.output_file,
             fieldnames=output_list[0].keys())

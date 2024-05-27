@@ -1,6 +1,7 @@
 from datetime import datetime
 from os.path import isfile
 import json
+import numpy as np
 
 
 def create_sigcap_timestamp(input_str):
@@ -70,3 +71,11 @@ def clean_signal(number):
     return ("NaN" if (number == 2147483647
                       or number == 9223372036854775807)
             else number)
+
+
+def dbm_to_mw(dbm):
+    return 10 ** (dbm / 10)
+
+
+def mw_to_dbm(mw):
+    return 10 * np.log10(mw)
