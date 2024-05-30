@@ -206,9 +206,9 @@ def cb_process(obj):
             temp_out["lte_primary_earfcn"] = util.clean_signal(
                 lte_primary["earfcn"])
             temp_out["lte_primary_band*"] = cell_helper.earfcn_to_band(
-                lte_primary["earfcn"])
+                temp_out["lte_primary_earfcn"])
             temp_out["lte_primary_freq_mhz*"] = cell_helper.earfcn_to_freq(
-                lte_primary["earfcn"])
+                temp_out["lte_primary_earfcn"])
             temp_out["lte_primary_width_mhz"] = util.clean_signal(
                 lte_primary["width"] / 1000)
             temp_out["lte_primary_rsrp_dbm"] = util.clean_signal(
@@ -249,7 +249,7 @@ def cb_process(obj):
         if nr_primary is None and len(entry["nr_info"]) > 0:
             nr_primary = entry["nr_info"][0]
         if nr_primary:
-            temp_out["nr_first_is_primary"] = (nr_primary["is_primary"]
+            temp_out["nr_first_is_primary"] = (nr_primary["status"]
                                                == "primary")
             temp_out["nr_first_is_signalStrAPI"] = nr_primary["isSignalStrAPI"]
             temp_out["nr_first_pci"] = util.clean_signal(
@@ -259,9 +259,10 @@ def cb_process(obj):
             temp_out["nr_first_arfcn"] = util.clean_signal(
                 nr_primary["nrarfcn"])
             temp_out["nr_first_band*"] = cell_helper.nrarfcn_to_band(
-                nr_primary["nrarfcn"])
+                temp_out["nr_first_arfcn"],
+                reg=cell_helper.REGION[options.region])
             temp_out["nr_first_freq_mhz*"] = cell_helper.nrarfcn_to_freq(
-                nr_primary["nrarfcn"])
+                temp_out["nr_first_arfcn"])
             temp_out["nr_first_ss_rsrp_dbm"] = util.clean_signal(
                 nr_primary["ssRsrp"])
             temp_out["nr_first_ss_rsrq_db"] = util.clean_signal(
@@ -297,14 +298,17 @@ def cb_process(obj):
         nr_cells = sorted(entry["nr_info"], key=lambda x: x["ssRsrp"])
         i = 1
         for cell in nr_cells:
+            if i >= max_nr:
+                break
             temp_out[f"nr_other{i}_pci"] = util.clean_signal(
                 nr_primary["nrPci"])
             temp_out[f"nr_other{i}_arfcn"] = util.clean_signal(
                 nr_primary["nrarfcn"])
             temp_out[f"nr_other{i}_band*"] = cell_helper.nrarfcn_to_band(
-                nr_primary["nrarfcn"])
+                temp_out[f"nr_other{i}_arfcn"],
+                reg=cell_helper.REGION[options.region])
             temp_out[f"nr_other{i}_freq_mhz*"] = cell_helper.nrarfcn_to_freq(
-                nr_primary["nrarfcn"])
+                temp_out[f"nr_other{i}_arfcn"])
             temp_out[f"nr_other{i}_ss_rsrp_dbm"] = util.clean_signal(
                 nr_primary["ssRsrp"])
             temp_out[f"nr_other{i}_ss_rsrq_db"] = util.clean_signal(
@@ -332,13 +336,15 @@ def cb_process(obj):
         lte_cells = sorted(entry["cell_info"], key=lambda x: x["rsrp"])
         i = 1
         for cell in lte_cells:
+            if i >= max_lte:
+                break
             temp_out[f"lte_other{i}_pci"] = util.clean_signal(cell["pci"])
             temp_out[f"lte_other{i}_earfcn"] = util.clean_signal(
                 cell["earfcn"])
             temp_out[f"lte_other{i}_band*"] = cell_helper.earfcn_to_band(
-                cell["earfcn"])
+                temp_out[f"lte_other{i}_earfcn"])
             temp_out[f"lte_other{i}_freq_mhz*"] = cell_helper.earfcn_to_freq(
-                cell["earfcn"])
+                temp_out[f"lte_other{i}_earfcn"])
             temp_out[f"lte_other{i}_rsrp_dbm"] = util.clean_signal(
                 cell["rsrp"])
             temp_out[f"lte_other{i}_rsrq_db"] = util.clean_signal(
@@ -425,6 +431,8 @@ def cb_process(obj):
             temp_out["wifi_2.4_other_stddev_rssi_db"] = "NaN"
         i = 1
         for cell in wifi_2_4:
+            if i > max_wifi_2_4:
+                break
             temp_out[f"wifi_2.4_other{i}_ssid"] = cell["ssid"]
             temp_out[f"wifi_2.4_other{i}_bssid"] = cell["bssid"]
             temp_out[f"wifi_2.4_other{i}_primary_freq_mhz"] = cell[
@@ -481,6 +489,8 @@ def cb_process(obj):
             temp_out["wifi_5_other_stddev_rssi_db"] = "NaN"
         i = 1
         for cell in wifi_5:
+            if i > max_wifi_5:
+                break
             temp_out[f"wifi_5_other{i}_ssid"] = cell["ssid"]
             temp_out[f"wifi_5_other{i}_bssid"] = cell["bssid"]
             temp_out[f"wifi_5_other{i}_primary_freq_mhz"] = cell[
@@ -536,6 +546,8 @@ def cb_process(obj):
             temp_out["wifi_6_other_stddev_rssi_db"] = "NaN"
         i = 1
         for cell in wifi_6:
+            if i > max_wifi_6:
+                break
             temp_out[f"wifi_6_other{i}_ssid"] = cell["ssid"]
             temp_out[f"wifi_6_other{i}_bssid"] = cell["bssid"]
             temp_out[f"wifi_6_other{i}_primary_freq_mhz"] = cell[
@@ -589,6 +601,9 @@ def main():
                         help="maximum number of Wi-Fi APs to be displayed")
     parser.add_argument("--filter", type=str,
                         help="filter of JSON string or path to JSON file")
+    parser.add_argument("--region", choices=cell_helper.REGION.keys(),
+                        default="NAR",
+                        help="Region for NR band conversion, default=NAR")
     parser.add_argument("--include-invalid-op", action="store_true",
                         help="include invalid operator names")
     parser.add_argument("--print-sensor-data", action="store_true",

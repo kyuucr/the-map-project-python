@@ -64,6 +64,7 @@ def get_network_type(sigcap):
 def is_primary(cell):
     return (cell["status"] == "primary"
             or cell["width"] > 0
+            or "registered" not in cell
             or cell["registered"])
 
 

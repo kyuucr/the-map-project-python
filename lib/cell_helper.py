@@ -1,6 +1,7 @@
 import functools
+import logging
 
-region = {
+REGION = {
     "GLOBAL": 255,
     "NAR": 1,
     "EU": 2,
@@ -84,72 +85,72 @@ cell_table = [
 ]
 
 nr_table = [
-    (1, 422000, 434000, region["GLOBAL"]),
-    (2, 386000, 398000, region["NAR"]),
-    (3, 361000, 376000, region["GLOBAL"]),
-    (5, 173800, 178800, region["GLOBAL"]),
-    (7, 524000, 538000, region["EMEA"]),
-    (8, 185000, 192000, region["GLOBAL"]),
-    (12, 145800, 149200, region["NAR"]),
-    (13, 149200, 151200, region["NAR"]),
-    (14, 151600, 153600, region["NAR"]),
-    (18, 172000, 175000, region["JAPAN"]),
-    (20, 158200, 164200, region["EMEA"]),
-    (24, 305000, 311800, region["NAR"]),
-    (25, 386000, 399000, region["NAR"]),
-    (26, 171800, 178800, region["NAR"]),
-    (28, 151600, 160600, (region["APAC"] | region["EU"])),
-    (29, 143400, 145600, region["NAR"]),
-    (30, 470000, 472000, region["NAR"]),
-    (31, 92500, 93500, region["GLOBAL"]),
-    (34, 402000, 405000, region["EMEA"]),
-    (38, 514000, 524000, region["EMEA"]),
-    (39, 376000, 384000, region["CHINA"]),
-    (40, 460000, 480000, region["APAC"]),
-    (41, 499200, 537999, region["GLOBAL"]),
-    (46, 743334, 795000, region["GLOBAL"]),
-    (47, 790334, 795000, region["GLOBAL"]),
-    (48, 636667, 646666, region["GLOBAL"]),
-    (50, 286400, 303400, region["EU"]),
-    (51, 285400, 286400, region["EU"]),
-    (53, 496700, 499000, region["UNKNOWN"]),
-    (54, 334000, 335000, region["UNKNOWN"]),
-    (65, 422000, 440000, region["GLOBAL"]),
-    (66, 422000, 440000, region["NAR"]),
-    (67, 147600, 151600, region["EMEA"]),
-    (70, 399000, 404000, region["NAR"]),
-    (71, 123400, 130400, region["NAR"]),
-    (72, 92200, 93200, region["EMEA"]),
-    (74, 295000, 303600, region["EMEA"]),
-    (75, 286400, 303400, region["EU"]),
-    (76, 285400, 286400, region["EU"]),
-    (77, 620000, 680000, region["UNKNOWN"]),
-    (78, 620000, 653333, region["UNKNOWN"]),
-    (79, 693334, 733333, region["UNKNOWN"]),
-    (85, 145600, 149200, region["NAR"]),
-    (90, 499200, 538000, region["GLOBAL"]),
-    (91, 285400, 286400, region["NAR"]),
-    (92, 286400, 303400, region["NAR"]),
-    (93, 285400, 286400, region["NAR"]),
-    (94, 286400, 303400, region["NAR"]),
-    (96, 795000, 875000, region["NAR"]),
-    (100, 183880, 185000, region["UNKNOWN"]),
-    (101, 380000, 382000, region["UNKNOWN"]),
-    (102, 795000, 828333, region["UNKNOWN"]),
-    (104, 828334, 875000, region["UNKNOWN"]),
-    (105, 122400, 130400, region["UNKNOWN"]),
-    (106, 187000, 188000, region["UNKNOWN"]),
-    (109, 286400, 303400, region["UNKNOWN"]),
-    (254, 496700, 500000, region["NTN"]),
-    (255, 305000, 311800, region["NTN"]),
-    (256, 434000, 440000, region["NTN"]),
-    (257, 2054166, 2104165, region["GLOBAL"]),
-    (258, 2016667, 2070832, region["GLOBAL"]),
-    (259, 2270833, 2337499, region["GLOBAL"]),
-    (260, 2229166, 2279165, region["GLOBAL"]),
-    (261, 2070833, 2084999, region["NAR"]),
-    (262, 2399166, 2415832, region["NAR"]),
-    (263, 2564083, 2794243, region["GLOBAL"])
+    (1, 422000, 434000, REGION["GLOBAL"]),
+    (2, 386000, 398000, REGION["NAR"]),
+    (3, 361000, 376000, REGION["GLOBAL"]),
+    (5, 173800, 178800, REGION["GLOBAL"]),
+    (7, 524000, 538000, REGION["EMEA"]),
+    (8, 185000, 192000, REGION["GLOBAL"]),
+    (12, 145800, 149200, REGION["NAR"]),
+    (13, 149200, 151200, REGION["NAR"]),
+    (14, 151600, 153600, REGION["NAR"]),
+    (18, 172000, 175000, REGION["JAPAN"]),
+    (20, 158200, 164200, REGION["EMEA"]),
+    (24, 305000, 311800, REGION["NAR"]),
+    (25, 386000, 399000, REGION["NAR"]),
+    (26, 171800, 178800, REGION["NAR"]),
+    (28, 151600, 160600, (REGION["APAC"] | REGION["EU"])),
+    (29, 143400, 145600, REGION["NAR"]),
+    (30, 470000, 472000, REGION["NAR"]),
+    (31, 92500, 93500, REGION["GLOBAL"]),
+    (34, 402000, 405000, REGION["EMEA"]),
+    (38, 514000, 524000, REGION["EMEA"]),
+    (39, 376000, 384000, REGION["CHINA"]),
+    (40, 460000, 480000, REGION["APAC"]),
+    (41, 499200, 537999, REGION["GLOBAL"]),
+    (46, 743334, 795000, REGION["GLOBAL"]),
+    (47, 790334, 795000, REGION["GLOBAL"]),
+    (48, 636667, 646666, REGION["GLOBAL"]),
+    (50, 286400, 303400, REGION["EU"]),
+    (51, 285400, 286400, REGION["EU"]),
+    (53, 496700, 499000, REGION["UNKNOWN"]),
+    (54, 334000, 335000, REGION["UNKNOWN"]),
+    (65, 422000, 440000, REGION["GLOBAL"]),
+    (66, 422000, 440000, REGION["NAR"]),
+    (67, 147600, 151600, REGION["EMEA"]),
+    (70, 399000, 404000, REGION["NAR"]),
+    (71, 123400, 130400, REGION["NAR"]),
+    (72, 92200, 93200, REGION["EMEA"]),
+    (74, 295000, 303600, REGION["EMEA"]),
+    (75, 286400, 303400, REGION["EU"]),
+    (76, 285400, 286400, REGION["EU"]),
+    (77, 620000, 680000, REGION["UNKNOWN"]),
+    (78, 620000, 653333, REGION["UNKNOWN"]),
+    (79, 693334, 733333, REGION["UNKNOWN"]),
+    (85, 145600, 149200, REGION["NAR"]),
+    (90, 499200, 538000, REGION["GLOBAL"]),
+    (91, 285400, 286400, REGION["NAR"]),
+    (92, 286400, 303400, REGION["NAR"]),
+    (93, 285400, 286400, REGION["NAR"]),
+    (94, 286400, 303400, REGION["NAR"]),
+    (96, 795000, 875000, REGION["NAR"]),
+    (100, 183880, 185000, REGION["UNKNOWN"]),
+    (101, 380000, 382000, REGION["UNKNOWN"]),
+    (102, 795000, 828333, REGION["UNKNOWN"]),
+    (104, 828334, 875000, REGION["UNKNOWN"]),
+    (105, 122400, 130400, REGION["UNKNOWN"]),
+    (106, 187000, 188000, REGION["UNKNOWN"]),
+    (109, 286400, 303400, REGION["UNKNOWN"]),
+    (254, 496700, 500000, REGION["NTN"]),
+    (255, 305000, 311800, REGION["NTN"]),
+    (256, 434000, 440000, REGION["NTN"]),
+    (257, 2054166, 2104165, REGION["GLOBAL"]),
+    (258, 2016667, 2070832, REGION["GLOBAL"]),
+    (259, 2270833, 2337499, REGION["GLOBAL"]),
+    (260, 2229166, 2279165, REGION["GLOBAL"]),
+    (261, 2070833, 2084999, REGION["NAR"]),
+    (262, 2399166, 2415832, REGION["NAR"]),
+    (263, 2564083, 2794243, REGION["GLOBAL"])
 ]
 
 nr_freq_table = [
@@ -160,6 +161,9 @@ nr_freq_table = [
 
 
 def earfcn_to_band(earfcn):
+    logging.info(f"converting earfcn {earfcn} to band")
+    if earfcn == "NaN":
+        return "N/A"
     for cell in cell_table:
         if cell[1] <= earfcn and cell[2] >= earfcn:
             return cell[0]
@@ -167,18 +171,25 @@ def earfcn_to_band(earfcn):
 
 
 def earfcn_to_freq(earfcn):
+    logging.info(f"converting earfcn {earfcn} to freq")
+    if earfcn == "NaN":
+        return "N/A"
     for cell in cell_table:
         if cell[1] <= earfcn and cell[2] >= earfcn:
             return (cell[3] + 0.1 * (earfcn - cell[1]))
     return 0.0
 
 
-def nrarfcn_to_band(nrarfcn, reg=region["GLOBAL"], multiple=False):
+def nrarfcn_to_band(nrarfcn, reg=REGION["GLOBAL"], multiple=False):
+    logging.info(f"converting nrarfcn {nrarfcn} to band, reg {reg}, "
+                 f"multiple {multiple}")
+    if nrarfcn == "NaN":
+        return "N/A"
     ret = list()
     for cell in nr_table:
         if (cell[1] <= nrarfcn and cell[2] >= nrarfcn
             and ((reg & cell[3])
-                 or cell[3] == region["UNKNOWN"])):
+                 or cell[3] == REGION["UNKNOWN"])):
             ret.append({
                 "num": cell[0],
                 "reg": cell[3],
@@ -192,8 +203,8 @@ def nrarfcn_to_band(nrarfcn, reg=region["GLOBAL"], multiple=False):
             smallest = functools.reduce(
                 lambda prev, curr: curr if curr["len"] < prev["len"] else prev,
                 ret)
-            if (smallest["reg"] == region["GLOBAL"]
-                    or smallest["reg"] & reg):
+            if (smallest["reg"] == REGION["GLOBAL"]
+                    or (smallest["reg"] == reg)):
                 ret = [smallest]
             else:
                 ret = [val for val in ret if val["num"] != smallest["num"]]
@@ -201,6 +212,9 @@ def nrarfcn_to_band(nrarfcn, reg=region["GLOBAL"], multiple=False):
 
 
 def nrarfcn_to_freq(nrarfcn):
+    logging.info(f"converting nrarfcn {nrarfcn} to freq")
+    if nrarfcn == "NaN":
+        return "NaN"
     for cell in nr_freq_table:
         if cell[2] <= nrarfcn and cell[3] >= nrarfcn:
             return round(cell[0] + cell[1] * (nrarfcn - cell[2]), 3)
