@@ -74,14 +74,19 @@ def cb_process(obj):
     # Compare maximum numbers with the requested maximum in the option
     if (options.max_lte is not None and options.max_lte < max_lte):
         max_lte = options.max_lte
+        print(f"Using the specified max # of LTE cells: {max_lte}")
     if (options.max_nr is not None and options.max_nr < max_nr):
         max_nr = options.max_nr
+        print(f"Using the specified max # of NR cells: {max_nr}")
     if (options.max_wifi is not None and options.max_wifi < max_wifi_2_4):
         max_wifi_2_4 = options.max_wifi
+        print(f"Using the specified max # of Wi-Fi 2.4 GHz: {max_wifi_2_4}")
     if (options.max_wifi is not None and options.max_wifi < max_wifi_5):
         max_wifi_5 = options.max_wifi
+        print(f"Using the specified max # of Wi-Fi 5 GHz: {max_wifi_5}")
     if (options.max_wifi is not None and options.max_wifi < max_wifi_6):
         max_wifi_6 = options.max_wifi
+        print(f"Using the specified max # of Wi-Fi 6 GHz: {max_wifi_6}")
 
     # If filter exist, filter the sigcap object
     if (options.filter is not None):
