@@ -96,6 +96,10 @@ def cb_process(obj):
             temp_out["tx_power_dbm"] = util.clean_signal(wifi_entry["txPower"])
             temp_out["link_margin_db"] = util.clean_signal(
                 wifi_entry["linkMargin"])
+            temp_out["aruba_ap_name"] = (wifi_entry["apName"]
+                                         if ("apName" in wifi_entry
+                                             and wifi_entry["apName"])
+                                         else "unknown")
 
             output_list.append(temp_out)
 

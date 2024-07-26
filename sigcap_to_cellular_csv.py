@@ -62,6 +62,9 @@ def cb_process(obj):
             "usingCA": entry["usingCA"],
         }
 
+        # Flag to insert a nan rows if there is no cellular data
+        has_data = False
+
         # LTE primary
         lte_primary = next(
             (x for x in entry["cell_info"] if util.is_primary(x)), None)
@@ -83,6 +86,7 @@ def cb_process(obj):
                 lte_primary["rssi"])
             temp_out["primary/other*"] = "primary"
             output_list.append(temp_out)
+            has_data = True
 
         # NR
         for nr_entry in entry["nr_info"]:
@@ -106,25 +110,42 @@ def cb_process(obj):
             temp_out["primary/other*"] = (
                 "primary" if nr_entry["status"] == "primary" else "other")
             output_list.append(temp_out)
+            has_data = True
 
         # Rest of LTE
         lte_others = [val for val in entry["cell_info"] if val != lte_primary]
         for lte_entry in lte_others:
             temp_out = overview_dict.copy()
             temp_out["lte/nr"] = "lte"
-            temp_out["pci"] = util.clean_signal(lte_primary["pci"])
-            temp_out["lte-ci/nr-nci"] = util.clean_signal(lte_primary["ci"])
+            temp_out["pci"] = util.clean_signal(lte_entry["pci"])
+            temp_out["lte-ci/nr-nci"] = util.clean_signal(lte_entry["ci"])
             temp_out["lte-earfcn/nr-arfcn"] = util.clean_signal(
-                lte_primary["earfcn"])
+                lte_entry["earfcn"])
             temp_out["band*"] = cell_helper.earfcn_to_band(
                 temp_out["lte-earfcn/nr-arfcn"])
             temp_out["freq_mhz*"] = cell_helper.earfcn_to_freq(
                 temp_out["lte-earfcn/nr-arfcn"])
-            temp_out["width_mhz"] = util.clean_signal(lte_primary["width"])
-            temp_out["rsrp_dbm"] = util.clean_signal(lte_primary["rsrp"])
-            temp_out["rsrq_db"] = util.clean_signal(lte_primary["rsrq"])
+            temp_out["width_mhz"] = util.clean_signal(lte_entry["width"])
+            temp_out["rsrp_dbm"] = util.clean_signal(lte_entry["rsrp"])
+            temp_out["rsrq_db"] = util.clean_signal(lte_entry["rsrq"])
             temp_out["lte-rssi/nr-sinr_dbm"] = util.clean_signal(
-                lte_primary["rssi"])
+                lte_entry["rssi"])
+            temp_out["primary/other*"] = "other"
+            output_list.append(temp_out)
+            has_data = True
+
+        if not has_data:
+            temp_out = overview_dict.copy()
+            temp_out["lte/nr"] = "lte"
+            temp_out["pci"] = "NaN"
+            temp_out["lte-ci/nr-nci"] = "NaN"
+            temp_out["lte-earfcn/nr-arfcn"] = "NaN"
+            temp_out["band*"] = "NaN"
+            temp_out["freq_mhz*"] = "NaN"
+            temp_out["width_mhz"] = "NaN"
+            temp_out["rsrp_dbm"] = "NaN"
+            temp_out["rsrq_db"] = "NaN"
+            temp_out["lte-rssi/nr-sinr_dbm"] = "NaN"
             temp_out["primary/other*"] = "other"
             output_list.append(temp_out)
 

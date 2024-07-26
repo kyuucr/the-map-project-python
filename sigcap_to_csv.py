@@ -371,7 +371,8 @@ def cb_process(obj):
         wifi_conn = next(
             (val for val in entry["wifi_info"] if val["connected"]), None)
         if wifi_conn:
-            temp_out["wifi_connected_ssid"] = wifi_conn["ssid"]
+            temp_out["wifi_connected_ssid"] = (
+                wifi_conn["ssid"] if "ssid" in wifi_conn else "")
             temp_out["wifi_connected_bssid"] = wifi_conn["bssid"]
             temp_out["wifi_connected_primary_freq_mhz"] = wifi_conn[
                 "primaryFreq"]
@@ -438,7 +439,8 @@ def cb_process(obj):
         for cell in wifi_2_4:
             if i > max_wifi_2_4:
                 break
-            temp_out[f"wifi_2.4_other{i}_ssid"] = cell["ssid"]
+            temp_out[f"wifi_2.4_other{i}_ssid"] = (
+                cell["ssid"] if "ssid" in cell else "")
             temp_out[f"wifi_2.4_other{i}_bssid"] = cell["bssid"]
             temp_out[f"wifi_2.4_other{i}_primary_freq_mhz"] = cell[
                 "primaryFreq"]
@@ -496,7 +498,8 @@ def cb_process(obj):
         for cell in wifi_5:
             if i > max_wifi_5:
                 break
-            temp_out[f"wifi_5_other{i}_ssid"] = cell["ssid"]
+            temp_out[f"wifi_5_other{i}_ssid"] = (
+                cell["ssid"] if "ssid" in cell else "")
             temp_out[f"wifi_5_other{i}_bssid"] = cell["bssid"]
             temp_out[f"wifi_5_other{i}_primary_freq_mhz"] = cell[
                 "primaryFreq"]
@@ -553,7 +556,8 @@ def cb_process(obj):
         for cell in wifi_6:
             if i > max_wifi_6:
                 break
-            temp_out[f"wifi_6_other{i}_ssid"] = cell["ssid"]
+            temp_out[f"wifi_6_other{i}_ssid"] = (
+                cell["ssid"] if "ssid" in cell else "")
             temp_out[f"wifi_6_other{i}_bssid"] = cell["bssid"]
             temp_out[f"wifi_6_other{i}_primary_freq_mhz"] = cell[
                 "primaryFreq"]
