@@ -402,6 +402,18 @@ def cb_process(obj):
                 "maxSupportedTxLinkSpeed"]
             temp_out["wifi_connected_max_rx_link_speed_mbps"] = wifi_conn[
                 "maxSupportedRxLinkSpeed"]
+            temp_out["wifi_connected_sta_count"] = util.clean_signal(
+                wifi_conn["staCount"])
+            if temp_out["wifi_connected_sta_count"] == -1:
+                temp_out["wifi_connected_sta_count"] = "NaN"
+            temp_out["wifi_connected_ch_util"] = util.clean_signal(
+                wifi_conn["chUtil"])
+            if temp_out["wifi_connected_ch_util"] == -1:
+                temp_out["wifi_connected_ch_util"] = "NaN"
+            temp_out["wifi_connected_tx_power_dbm"] = util.clean_signal(
+                wifi_conn["txPower"])
+            temp_out["wifi_connected_link_margin_db"] = util.clean_signal(
+                wifi_conn["linkMargin"])
         else:
             temp_out["wifi_connected_ssid"] = "N/A"
             temp_out["wifi_connected_bssid"] = "N/A"
@@ -416,6 +428,10 @@ def cb_process(obj):
             temp_out["wifi_connected_rx_link_speed_mbps"] = "NaN"
             temp_out["wifi_connected_max_tx_link_speed_mbps"] = "NaN"
             temp_out["wifi_connected_max_rx_link_speed_mbps"] = "NaN"
+            temp_out["wifi_connected_sta_count"] = "NaN"
+            temp_out["wifi_connected_ch_util"] = "NaN"
+            temp_out["wifi_connected_tx_power_dbm"] = "NaN"
+            temp_out["wifi_connected_link_margin_db"] = "NaN"
 
         # Wi-Fi other 2.4 GHz
         wifi_2_4 = [val for val in entry["wifi_info"]
