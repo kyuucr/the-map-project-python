@@ -29,6 +29,7 @@ def get_operator_name(sigcap):
     if (op == ""
             or op == "Searching for Service"
             or op == "Extended Network"
+            or op == "Extended"
             or op == "Preferred System"):
         op = (sigcap["simName"] if sigcap["simName"]
               else sigcap["carrierName"] if sigcap["carrierName"]
