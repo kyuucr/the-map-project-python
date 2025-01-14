@@ -199,6 +199,9 @@ def cb_process(obj):
                 if ("targetUrl" in entry["http_info"]
                     and entry["http_info"]["targetUrl"])
                 else "N/A")
+        else:
+            temp_out["http_tput_mean_mbps"] = "NaN"
+            temp_out["http_target"] = "N/A"
 
         temp_out["lte_count"] = len(entry["cell_info"])
 
@@ -306,24 +309,23 @@ def cb_process(obj):
             if i >= max_nr:
                 break
             temp_out[f"nr_other{i}_pci"] = util.clean_signal(
-                nr_primary["nrPci"])
+                cell["nrPci"])
             temp_out[f"nr_other{i}_arfcn"] = util.clean_signal(
-                nr_primary["nrarfcn"])
+                cell["nrarfcn"])
             temp_out[f"nr_other{i}_band*"] = cell_helper.nrarfcn_to_band(
                 temp_out[f"nr_other{i}_arfcn"],
                 reg=cell_helper.REGION[options.region])
             temp_out[f"nr_other{i}_freq_mhz*"] = cell_helper.nrarfcn_to_freq(
                 temp_out[f"nr_other{i}_arfcn"])
             temp_out[f"nr_other{i}_ss_rsrp_dbm"] = util.clean_signal(
-                nr_primary["ssRsrp"])
+                cell["ssRsrp"])
             temp_out[f"nr_other{i}_ss_rsrq_db"] = util.clean_signal(
-                nr_primary["ssRsrq"])
+                cell["ssRsrq"])
             temp_out[f"nr_other{i}_csi_rsrp_dbm"] = util.clean_signal(
-                nr_primary["csiRsrp"])
+                cell["csiRsrp"])
             temp_out[f"nr_other{i}_csi_rsrq_db"] = util.clean_signal(
-                nr_primary["csiRsrq"])
-            temp_out[f"nr_other{i}_is_signalStrAPI"] = nr_primary[
-                "isSignalStrAPI"]
+                cell["csiRsrq"])
+            temp_out[f"nr_other{i}_is_signalStrAPI"] = cell["isSignalStrAPI"]
             i += 1
         while i < max_nr:
             temp_out[f"nr_other{i}_pci"] = "NaN"

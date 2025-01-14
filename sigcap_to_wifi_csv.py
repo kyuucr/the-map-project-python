@@ -61,7 +61,8 @@ def cb_process(obj):
             device_timedata[entry["uuid"]].append(actual_timestamp.timestamp())
             temp_out = overview_dict.copy()
             temp_out["timestamp"] = actual_timestamp.isoformat()
-            temp_out["ssid"] = wifi_entry["ssid"]
+            temp_out["ssid"] = (wifi_entry["ssid"]
+                                if "ssid" in wifi_entry else "")
             temp_out["bssid"] = wifi_entry["bssid"]
             temp_out["primary_freq_mhz"] = wifi_entry["primaryFreq"]
             temp_out["center_freq_mhz"] = (
